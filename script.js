@@ -213,12 +213,31 @@ categoryButtons.forEach((btn) => {
 });
 
 // ===== 色の選択(フォームごとに1つ選べる) =====
-document.querySelectorAll(".color-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    btn.closest(".color-list").querySelectorAll(".color-btn").forEach((b) => {
-      b.classList.remove("selected");
-    });
-    btn.classList.add("selected");
+// 色のボタンを選択状態にする
+function selectColorBtn(btn) {
+  btn.closest(".color-list").querySelectorAll(".color-btn").forEach((b) => {
+    b.classList.remove("selected");
+  });
+  btn.classList.add("selected");
+}
+
+// よく使う色のボタン
+document.querySelectorAll(".color-btn:not(.color-custom)").forEach((btn) => {
+  btn.addEventListener("click", () => selectColorBtn(btn));
+});
+
+// 🎨ボタンに、選んだ色をセットする
+function setCustomColor(label, color) {
+  label.dataset.color = color;
+  label.style.background = color;
+  label.querySelector(".color-picker").value = color;
+}
+
+// 🎨ボタンで色を選んだら、その色を選択状態にする
+document.querySelectorAll(".color-custom").forEach((label) => {
+  label.querySelector(".color-picker").addEventListener("input", (e) => {
+    setCustomColor(label, e.target.value);
+    selectColorBtn(label);
   });
 });
 
@@ -228,10 +247,21 @@ function getSelectedColor(form) {
 }
 
 // そのフォームで、指定した色を選択状態にする(編集のときに使う)
+// よく使う色になければ、🎨ボタンにその色を入れて選択する
 function setSelectedColor(form, color) {
-  form.querySelectorAll(".color-btn").forEach((b) => {
-    b.classList.toggle("selected", b.dataset.color === color);
+  let found = false;
+  form.querySelectorAll(".color-btn:not(.color-custom)").forEach((b) => {
+    const match = b.dataset.color === color;
+    b.classList.toggle("selected", match);
+    if (match) found = true;
   });
+  const custom = form.querySelector(".color-custom");
+  custom.classList.toggle("selected", !found);
+  if (found) {
+    custom.style.background = ""; // よく使う色なら、🎨ボタンは虹色に戻す
+  } else {
+    setCustomColor(custom, color);
+  }
 }
 
 // ===== グッズリスト =====
@@ -1023,6 +1053,7 @@ function updateChusenFilterButton() {
   chusenFilterBtn.textContent = count ? `🔍 条件を絞る(${count})` : "🔍 条件を絞る";
   chusenFilterBtn.classList.toggle("active", count > 0);
 }
+
 // ===== 時間を選ぶ小さな窓 =====
 const tsBg = document.getElementById("time-sheet-bg");
 const tsSheet = document.getElementById("time-sheet");
@@ -1073,6 +1104,16 @@ function scrollColumnTo(col, value) {
       tsTarget.value = `${columnValue(tsHour)}:${columnValue(tsMinute)}`;
     }
   });
+  // マウスのホイール・トラックパッドは、1回で1つずつだけ動かす
+  let lastWheel = 0;
+  col.addEventListener("wheel", (e) => {
+    e.preventDefault(); // 勢いよく飛んでいかないようにする
+    const now = Date.now();
+    if (now - lastWheel < 150) return; // 速く回しても、0.15秒に1つまで
+    lastWheel = now;
+    const i = Math.round(col.scrollTop / ITEM_HEIGHT) + (e.deltaY > 0 ? 1 : -1);
+    col.scrollTo({ top: i * ITEM_HEIGHT, behavior: "smooth" });
+  }, { passive: false });
   // 数字をタップしたら、その数字まで動かす
   col.addEventListener("click", (e) => {
     const item = e.target.closest(".ts-item");
@@ -1184,3 +1225,4 @@ function normalizeTime(text) {
 
 // ===== 最初に1回描画する =====
 renderCalendar();
+
