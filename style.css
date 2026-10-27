@@ -1,0 +1,1100 @@
+/* ===================================================
+   色の設定:色を変えたいときは、ここだけ変えればOK
+   =================================================== */
+:root {
+  --bg: #fbfaf7;          /* 画面の背景色 */
+  --text: #2b2b2b;        /* 日付の文字色 */
+  --sub-text: #8a8a8a;    /* 曜日・ラベルの文字色 */
+  --main: #da3a62;        /* メインカラー(ボタンなど) */
+  --today-bg: #e9dde0;    /* 今日の丸・選択中の背景色 */
+  --today-text: #5c1a2b;  /* 今日の数字の色 */
+  --sun: #c0392b;         /* 日曜日の文字色 */
+  --sat: #2f5fa8;         /* 土曜日の文字色 */
+  --line: #e2dbd2;        /* 区切り線・枠線の色 */
+}
+
+body {
+  margin: 0;
+  padding-bottom: 90px;   /* 下のナビにカレンダーが隠れないように */
+  font-family: "Hiragino Sans", "Noto Sans JP", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== 上のタブ ===== */
+.top-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.tab {
+  flex: 1;
+  padding: 16px 0;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  font-size: 1.1rem;
+  color: var(--sub-text);
+  cursor: pointer;
+}
+
+.tab.active {
+  color: var(--main);
+  border-bottom-color: var(--main);
+}
+
+/* ===== カレンダー ===== */
+.calendar {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px 8px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 12px;
+  margin-bottom: 16px;
+}
+
+.calendar-header h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: normal;
+}
+
+.calendar-header button {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--main);
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.calendar-header button:hover {
+  background: var(--today-bg);
+}
+
+.weekdays,
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));  /* 長い作品名でも列の幅を変えない */
+  text-align: center;
+}
+
+.weekdays div {
+  padding: 12px 0;
+  font-size: 1rem;
+  color: var(--sub-text);
+}
+
+/* 日付のマス(数字と予定のバーを縦に並べる) */
+.day {
+  min-width: 0;           /* マスが中身に合わせて広がらないようにする */
+  min-height: 72px;
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 1.1rem;
+}
+
+.day.empty {
+  visibility: hidden;
+}
+
+.day-num {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.sun { color: var(--sun); }
+.sat { color: var(--sat); }
+
+.day.today .day-num {
+  background: var(--today-bg);
+  color: var(--today-text);
+  font-weight: bold;
+}
+
+/* 予定の色のバー(タップで詳細画面) */
+.event-bar {
+  width: 100%;
+  height: 16px;
+  padding-left: 3px;
+  box-sizing: border-box;
+  font-size: 0.65rem;
+  line-height: 16px;
+  color: #fff;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;  /* はみ出た作品名は「…」で切る */
+  cursor: pointer;
+}
+
+/* 当落発表日のバー(点線の枠) */
+.event-bar.result-bar {
+  background: #fff;
+  border: 1.5px dashed;
+  border-radius: 3px;
+  line-height: 13px;
+  font-weight: bold;
+}
+
+/* 入金期限のバー(実線の枠) */
+.event-bar.pay-bar {
+  background: #fff;
+  border: 1.5px solid;
+  border-radius: 3px;
+  line-height: 13px;
+  font-weight: bold;
+}
+
+/* 入金済みのバーは薄く表示 */
+.event-bar.pay-bar.done {
+  opacity: 0.5;
+}
+
+/* ===== 下のナビゲーション ===== */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  font-size: 0.8rem;
+  color: var(--sub-text);
+  cursor: pointer;
+}
+
+.nav-icon {
+  font-size: 1.4rem;
+  padding: 4px 20px;      /* 2つ目の数字で、選択中の背景の横幅が変わる */
+  border-radius: 14px;
+}
+
+.nav-item.active {
+  color: var(--main);
+  font-weight: bold;
+}
+
+.nav-item.active .nav-icon {
+  background: var(--today-bg);
+}
+
+/* アイコン画像の大きさ */
+.nav-icon img {
+  width: 26px;            /* ここの数字で横幅が変わる */
+  height: auto;
+  display: block;
+}
+
+/* ===== 右下の追加ボタン ===== */
+.fab {
+  position: fixed;
+  right: 20px;
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+  width: 60px;
+  height: 60px;
+  border: none;
+  border-radius: 18px;
+  background: var(--main);
+  color: #fff;
+  font-size: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+/* ===== 追加画面・詳細画面(共通) ===== */
+.add-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow-y: auto;
+  background: var(--bg);
+  padding: env(safe-area-inset-top, 0px) 16px 16px;
+}
+
+.add-screen.open {
+  display: block;
+}
+
+.add-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.add-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.close-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--main);
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+
+.add-label {
+  margin: 24px 0 12px;
+  color: var(--sub-text);
+}
+
+/* カテゴリのボタン */
+.category-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.category-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 0;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.category-icon {
+  font-size: 1.5rem;
+}
+
+.category-icon img {
+  width: 32px;
+  height: auto;
+  display: block;
+}
+
+.category-btn.selected {
+  border-color: var(--main);
+  background: var(--today-bg);
+  color: var(--main);
+  font-weight: bold;
+}
+
+/* ===== 入力フォーム ===== */
+.form {
+  display: none;
+  margin-top: 24px;
+}
+
+.form.show {
+  display: block;
+}
+
+.field {
+  display: block;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: var(--sub-text);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid var(--main);
+  border-color: transparent;
+}
+
+/* iPhoneで日付・時間の欄も横幅いっぱいにする */
+.field input[type="date"],
+.field input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-height: 46px;
+  text-align: left;
+}
+
+.arrow {
+  margin: -8px 0 8px;
+  text-align: center;
+  color: var(--sub-text);
+}
+
+/* 開場・開演時間を2列に並べる */
+.time-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ===== タップで開閉するバー(入金・グッズ) ===== */
+.accordion {
+  margin-bottom: 16px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.accordion summary {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 4px;
+  font-weight: bold;
+  list-style: none;
+  cursor: pointer;
+}
+
+.accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.accordion summary::after {
+  content: "▾";
+  color: var(--main);
+  transition: transform 0.2s;
+}
+
+.accordion[open] summary::after {
+  transform: rotate(180deg);
+}
+
+/* ===== グッズリスト ===== */
+.goods-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 56px 32px;  /* 品名 / 単価 / 数量 / 削除 */
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.goods-head {
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  color: var(--sub-text);
+}
+
+.goods-row input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.goods-delete {
+  border: none;
+  background: transparent;
+  color: var(--sub-text);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.add-goods-btn {
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed var(--main);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--main);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.goods-total {
+  display: flex;
+  justify-content: space-between;
+  margin: 12px 0 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-weight: bold;
+}
+
+#goods-total {
+  font-size: 1.2rem;
+  color: var(--main);
+}
+
+/* ===== 色の選択 ===== */
+.color-list {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.color-btn {
+  width: 36px;
+  height: 36px;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.color-btn.selected {
+  border-color: var(--text);
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+/* ===== 保存ボタン ===== */
+.save-btn {
+  width: 100%;
+  margin-bottom: 24px;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--main);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ===== 予定の詳細画面 ===== */
+/* 作品名(左に予定の色の線) */
+.detail-title {
+  margin: 24px 0 16px;
+  padding-left: 12px;
+  border-left: 6px solid;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+/* 項目1つ分(ラベル+内容) */
+.detail-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-value {
+  margin: 0;
+  font-size: 1rem;
+  white-space: pre-wrap;        /* メモの改行をそのまま表示 */
+}
+
+/* グッズ1行:品名 / 単価×数量 / 小計 */
+.detail-goods-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+/* 削除ボタン(誤って押さないよう、赤い枠線だけにする) */
+.delete-btn {
+  width: 100%;
+  margin: 32px 0 24px;
+  padding: 16px;
+  border: 1px solid #c0392b;
+  border-radius: 12px;
+  background: transparent;
+  color: #c0392b;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ===== 抽選の状況ボタン ===== */
+.status-actions {
+  margin-top: 24px;
+  text-align: center;
+}
+
+/* フォームの中の小見出し(抽選期間・当落発表・入金) */
+.form-section {
+  margin: 24px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--main);
+}
+
+/* チケットの形のボタン(観劇日の詳細を入力する) */
+.ticket-btn {
+  position: relative;
+  display: flex;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 14px;
+  background: var(--main);
+  background: linear-gradient(135deg, var(--main), color-mix(in srgb, var(--main) 65%, #fff));
+  color: #fff;
+  font-family: inherit;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.ticket-btn:active {
+  transform: translateY(2px);                 /* 押すと少し沈む */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+.ticket-main {
+  flex: 1;
+  padding: 16px 18px;
+  text-align: left;
+}
+
+.ticket-title {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: bold;
+}
+
+.ticket-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+/* 右側の半券(点線のもぎり線と矢印) */
+.ticket-stub {
+  position: relative;
+  width: 56px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-left: 2px dashed rgba(255, 255, 255, 0.6);
+  font-size: 1.8rem;
+}
+
+/* もぎり線の上下の半円の切り込み */
+.ticket-stub::before,
+.ticket-stub::after {
+  content: "";
+  position: absolute;
+  left: -9px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.ticket-stub::before { top: -8px; }
+.ticket-stub::after { bottom: -8px; }
+
+/* 入金したボタン(メインカラーの枠線の丸いボタン) */
+.paid-btn {
+  padding: 12px 28px;
+  border: 2px solid var(--main);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--main);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* 別の観劇日も追加する・条件をリセット(小さな文字のリンク) */
+.text-link {
+  display: block;
+  margin: 12px auto 0;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: var(--sub-text);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* 作品名(入力できない欄)は背景を少し灰色に */
+.field input[readonly] {
+  background: #f3f1ee;
+  color: var(--sub-text);
+}
+
+/* 当落発表の前に出す「あと◯日」の表示 */
+.wait-box {
+  padding: 16px;
+  border: 1.5px dashed var(--main);
+  border-radius: 14px;
+  background: var(--today-bg);
+  color: var(--main);
+  font-size: 1rem;
+}
+
+.wait-box strong {
+  font-size: 1.3rem;
+}
+
+/* 編集ボタン(メインカラーの枠線) */
+.hensyuu-btn {
+  width: 100%;
+  margin-top: 32px;
+  padding: 16px;
+  border: 1px solid var(--main);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--main);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.hensyuu-btn + .delete-btn {
+  margin-top: 12px;   /* 編集ボタンのすぐ下に削除ボタン */
+}
+
+/* ===== 観劇タブ ===== */
+.page {
+  display: none;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+.page.show {
+  display: block;
+}
+
+/* 上の「◯年 ◯月」と条件を絞る(スクロールしても上に残る) */
+.list-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 4px 12px;
+  background: var(--bg);
+  border-bottom: 2px solid var(--main);
+}
+
+.list-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* 条件を絞るボタン */
+.filter-btn {
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* 絞り込み中はメインカラーにする */
+.filter-btn.active {
+  border-color: var(--main);
+  background: var(--main);
+  color: #fff;
+}
+
+/* 年・劇場の選択欄(押すと開く) */
+.filter-panel {
+  display: none;
+  margin-top: 12px;
+}
+
+.filter-panel.open {
+  display: block;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--sub-text);
+}
+
+.filter-item span {
+  width: 32px;
+}
+
+.filter-item select {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.kangeki-list {
+  padding-top: 4px;
+}
+
+/* 月の区切り */
+.k-month-label {
+  margin: 20px 4px 8px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--sub-text);
+}
+
+/* 観劇のカード(横長のチケット) */
+.k-card {
+  display: flex;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+/* 左の日付部分(作品の色で塗る) */
+.k-date {
+  width: 76px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 0;
+  color: #fff;
+  border-right: 2px dashed rgba(255, 255, 255, 0.7);  /* もぎり線 */
+}
+
+.k-m { font-size: 0.8rem; }
+.k-d { font-size: 1.8rem; font-weight: bold; line-height: 1.1; }
+.k-w { font-size: 0.75rem; }
+
+/* 右の作品の情報 */
+.k-info {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+}
+
+.k-title {
+  margin: 0 0 6px;
+  padding-right: 56px;          /* 「あと◯日」と重ならないように */
+  font-size: 1.05rem;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.k-sub {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--sub-text);
+}
+
+/* 一番近い観劇の「あと◯日」 */
+.k-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--main);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+/* 終わった観劇は灰色(タップで詳細は見られる) */
+.k-card.past {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.k-empty {
+  margin-top: 40px;
+  text-align: center;
+  color: var(--sub-text);
+}
+
+/* ===== 時間を選ぶシート ===== */
+/* 開場・開演時間の欄(タップでシートが開く) */
+.field input.time-input {
+  background: #fff;        /* 入力できない欄の灰色にならないようにする */
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* 窓の外をタップしたら閉じるための、透明な背景 */
+.time-sheet-bg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.time-sheet-bg.open {
+  display: block;
+}
+
+/* 時間の欄の下に出る小さな窓 */
+.time-sheet {
+  position: absolute;      /* 場所は script.js で時間の欄の下に合わせる */
+  width: 240px;
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* 「◯分/手入力」の切り替え */
+.ts-modes {
+  display: flex;
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ts-mode {
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  background: #fff;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ts-mode + .ts-mode {
+  border-left: 1px solid var(--line);
+}
+
+.ts-mode.active {
+  background: var(--today-bg);
+  color: var(--main);
+  font-weight: bold;
+}
+
+/* スライドで選ぶ部分 */
+.ts-wheels {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 180px;           /* 数字5つ分 */
+}
+
+/* 真ん中の選ばれている帯 */
+.ts-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 36px;
+  transform: translateY(-50%);
+  border-radius: 10px;
+  background: var(--today-bg);
+  pointer-events: none;
+}
+
+/* 時・分の列(上下にスライドできる) */
+.ts-col {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 72px 0;         /* 一番上・一番下の数字も真ん中に来られるように */
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;   /* 数字の位置でピタッと止まる */
+  scrollbar-width: none;
+  text-align: center;
+  -webkit-mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+  mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+}
+
+.ts-col::-webkit-scrollbar {
+  display: none;
+}
+
+.ts-item {
+  height: 36px;            /* script.js の ITEM_HEIGHT と同じにする */
+  line-height: 36px;
+  scroll-snap-align: center;
+  font-size: 1.1rem;
+  color: var(--sub-text);
+  cursor: pointer;
+}
+
+.ts-item.selected {
+  color: var(--main);
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.ts-colon {
+  z-index: 1;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* 手で入力する部分 */
+.ts-manual {
+  display: none;
+  padding: 8px 0;
+  text-align: center;
+}
+
+.ts-manual input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1.3rem;
+  font-family: inherit;
+  text-align: center;
+  color: var(--text);
+}
+
+.ts-manual p {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: var(--sub-text);
+}
+
+/* キャンセル・OK */
+.ts-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.ts-cancel,
+.ts-ok {
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--main);
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.ts-ok {
+  font-weight: bold;
+}
+
+/* ===== 抽選タブ ===== */
+/* 左の締切日(白地に作品の色の点線の枠で、観劇タブと区別する) */
+.c-date {
+  width: 76px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0;
+  box-sizing: border-box;
+  border: 2px dashed;      /* 色は script.js で作品の色にする */
+  border-radius: 14px 0 0 14px;
+  background: #fff;
+}
+
+.c-label {
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+/* 右上の状況の札 */
+.c-status {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.c-status-applied {
+  border: 1px solid var(--main);
+  color: var(--main);
+}
+
+.c-status-won {
+  background: var(--main);
+  color: #fff;
+}
+
+.c-status-paid {
+  background: var(--line);
+  color: var(--sub-text);
+}
+
+/* 抽選カードのタイトルは札と重ならないように */
+.c-card .k-title {
+  padding-right: 72px;
+}
+
+/* 一番下の「次にやること」 */
+.c-next {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--main);
+}
