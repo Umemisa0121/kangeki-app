@@ -638,7 +638,7 @@ body {
   cursor: pointer;
 }
 
-/* 別の観劇日も追加する・条件をリセット(小さな文字のリンク) */
+/* 別の観劇日も追加する(小さな文字のリンク) */
 .text-link {
   display: block;
   margin: 12px auto 0;
@@ -655,20 +655,6 @@ body {
 .field input[readonly] {
   background: #f3f1ee;
   color: var(--sub-text);
-}
-
-/* 当落発表の前に出す「あと◯日」の表示 */
-.wait-box {
-  padding: 16px;
-  border: 1.5px dashed var(--main);
-  border-radius: 14px;
-  background: var(--today-bg);
-  color: var(--main);
-  font-size: 1rem;
-}
-
-.wait-box strong {
-  font-size: 1.3rem;
 }
 
 /* 編集ボタン(メインカラーの枠線) */
@@ -866,20 +852,53 @@ body {
   color: var(--sub-text);
 }
 
+/* 当落発表の前に出す「あと◯日」の表示 */
+.wait-box {
+  padding: 16px;
+  border: 1.5px dashed var(--main);
+  border-radius: 14px;
+  background: var(--today-bg);
+  color: var(--main);
+  font-size: 1rem;
+}
+
+.wait-box strong {
+  font-size: 1.3rem;
+}
+
+/* 時間の選択欄(時 : 分) */
+.time-select {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-select select {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--text);
+}
+
 /* ===== 時間を選ぶシート ===== */
 /* 開場・開演時間の欄(タップでシートが開く) */
 .field input.time-input {
-  background: #fff;        /* 入力できない欄の灰色にならないようにする */
+  background: #fff;
   color: var(--text);
-  cursor: pointer;
 }
 
-/* 窓の外をタップしたら閉じるための、透明な背景 */
+/* 小さな窓の入れ物(後ろの画面はそのまま押せる) */
 .time-sheet-bg {
   display: none;
   position: fixed;
   inset: 0;
   z-index: 20;
+  pointer-events: none;
 }
 
 .time-sheet-bg.open {
@@ -896,36 +915,7 @@ body {
   border-radius: 14px;
   background: #fff;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-}
-
-/* 「◯分/手入力」の切り替え */
-.ts-modes {
-  display: flex;
-  margin-bottom: 8px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.ts-mode {
-  flex: 1;
-  padding: 6px 0;
-  border: none;
-  background: #fff;
-  color: var(--text);
-  font-size: 0.85rem;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.ts-mode + .ts-mode {
-  border-left: 1px solid var(--line);
-}
-
-.ts-mode.active {
-  background: var(--today-bg);
-  color: var(--main);
-  font-weight: bold;
+  pointer-events: auto;    /* 窓の中は押せるようにする */
 }
 
 /* スライドで選ぶ部分 */
@@ -974,6 +964,7 @@ body {
   height: 36px;            /* script.js の ITEM_HEIGHT と同じにする */
   line-height: 36px;
   scroll-snap-align: center;
+  scroll-snap-stop: always; /* 指でスッと動かしても、1つずつ止まる */
   font-size: 1.1rem;
   color: var(--sub-text);
   cursor: pointer;
@@ -989,32 +980,6 @@ body {
   z-index: 1;
   font-size: 1.2rem;
   font-weight: bold;
-}
-
-/* 手で入力する部分 */
-.ts-manual {
-  display: none;
-  padding: 8px 0;
-  text-align: center;
-}
-
-.ts-manual input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fff;
-  font-size: 1.3rem;
-  font-family: inherit;
-  text-align: center;
-  color: var(--text);
-}
-
-.ts-manual p {
-  margin: 6px 0 0;
-  font-size: 0.75rem;
-  color: var(--sub-text);
 }
 
 /* キャンセル・OK */
@@ -1097,4 +1062,43 @@ body {
   font-size: 0.85rem;
   font-weight: bold;
   color: var(--main);
+}
+
+/* ===== 色の選択(8色+好きな色) ===== */
+/* 入りきらないときは折り返す */
+.color-list {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 🎨 好きな色のボタン(まだ選んでいないときは虹色) */
+.color-custom {
+  position: relative;
+  overflow: hidden;
+  background: conic-gradient(red, orange, yellow, lime, cyan, blue, magenta, red);
+}
+
+/* 色を選ぶ部品は見えなくして、ボタン全体に重ねる */
+.color-custom .color-picker {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* 薄い色のバーでも白い文字が読めるように、うっすら影を付ける */
+.event-bar:not(.result-bar):not(.pay-bar),
+.k-date {
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
 }
