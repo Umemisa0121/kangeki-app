@@ -1233,7 +1233,6 @@ function updateSuggestions() {
   fillSuggest(theaterSuggest, recent.map((ev) => ev.theater));
   fillSuggest(goodsSuggest, recent.flatMap((ev) => (ev.goods || []).map((g) => g.name)));
 }
-z
 // ===== 最初に1回描画する =====
 renderCalendar();
 
