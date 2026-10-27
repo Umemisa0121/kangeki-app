@@ -466,7 +466,7 @@ function openDetail(id) {
   } else {
     html += detailRow("カテゴリ", "観劇");
     html += detailRow("観劇日", formatDate(ev.start));
-    html += detailRow("劇場", ev.theater);
+    html += detailRow("会場", ev.theater);
     html += detailRow("開場時間", ev.openTime);
     html += detailRow("開演時間", ev.startTime);
 
