@@ -5,7 +5,7 @@
   --bg: #fbfaf7;          /* 画面の背景色 */
   --text: #2b2b2b;        /* 日付の文字色 */
   --sub-text: #8a8a8a;    /* 曜日・ラベルの文字色 */
-  --main: #da3a62;        /* メインカラー(ボタンなど) */
+   --main: #da3a62;        /* メインカラー(ボタンなど) */
   --today-bg: #e9dde0;    /* 今日の丸・選択中の背景色 */
   --today-text: #5c1a2b;  /* 今日の数字の色 */
   --sun: #c0392b;         /* 日曜日の文字色 */
@@ -1101,4 +1101,24 @@ body {
 .event-bar:not(.result-bar):not(.pay-bar),
 .k-date {
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+/* 予定がない段の、見えない空のバー(下の段の位置をそろえるため) */
+.event-bar.spacer {
+  visibility: hidden;
+}
+
+/* 予定の始まりと終わりの日は、すき間をあけて角を丸くする */
+.event-bar.bar-start {
+  border-left: 2px solid var(--bg);
+  border-radius: 6px 0 0 6px;
+}
+
+.event-bar.bar-end {
+  border-right: 2px solid var(--bg);
+  border-radius: 0 6px 6px 0;
+}
+
+.event-bar.bar-start.bar-end {
+  border-radius: 6px;
 }
