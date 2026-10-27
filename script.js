@@ -137,6 +137,9 @@ function renderCalendar() {
   // 観劇タブ・抽選タブのリストも最新の状態にする
   renderKangekiList(false);
   renderChusenList(false);
+
+  // 入力欄の候補も最新の状態にする
+  updateSuggestions();
 }
 
 // 前月ボタン
@@ -271,7 +274,7 @@ function addGoodsRow(g) {
   const row = document.createElement("div");
   row.className = "goods-row";
   row.innerHTML = `
-    <input type="text" class="goods-name" placeholder="品名">
+    <input type="text" class="goods-name" placeholder="品名" list="goods-suggest" autocomplete="off">
     <input type="number" class="goods-price" placeholder="0" min="0" inputmode="numeric">
     <input type="number" class="goods-qty" value="1" min="1" inputmode="numeric">
     <button type="button" class="goods-delete" aria-label="この行を削除">×</button>
@@ -1223,6 +1226,14 @@ function normalizeTime(text) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+// 保存してある予定から候補を作り直す(新しく入れたものほど上に出す)
+function updateSuggestions() {
+  const recent = [...events].reverse();
+  fillSuggest(titleSuggest, recent.map((ev) => ev.title));
+  fillSuggest(theaterSuggest, recent.map((ev) => ev.theater));
+  fillSuggest(goodsSuggest, recent.flatMap((ev) => (ev.goods || []).map((g) => g.name)));
+}
+z
 // ===== 最初に1回描画する =====
 renderCalendar();
 
