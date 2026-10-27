@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>観劇スケジュール帳</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 上のタブ -->
+  <nav class="top-tabs">
+    <button class="tab active">カレンダー</button>
+  </nav>
+
+  <!-- カレンダー -->
+  <div class="calendar">
+    <div class="calendar-header">
+      <button id="prev-btn" aria-label="前の月">‹</button>
+      <h2 id="month-title"></h2>
+      <button id="next-btn" aria-label="次の月">›</button>
+    </div>
+
+    <div class="weekdays">
+      <div class="sun">日</div>
+      <div>月</div>
+      <div>火</div>
+      <div>水</div>
+      <div>木</div>
+      <div>金</div>
+      <div class="sat">土</div>
+    </div>
+
+    <div class="days" id="days"></div>
+  </div>
+
+  <!-- 観劇タブのページ(最初は隠しておく) -->
+  <section class="page" id="kangeki-page">
+    <div class="list-header">
+      <div class="list-header-row">
+        <h2 id="list-month"></h2>
+        <button class="filter-btn" id="filter-btn">🔍 条件を絞る</button>
+      </div>
+
+      <!-- 「条件を絞る」を押すと開く -->
+      <div class="filter-panel" id="filter-panel">
+        <label class="filter-item">
+          <span>年</span>
+          <select id="filter-year"><option value="">すべて</option></select>
+        </label>
+        <label class="filter-item">
+          <span>劇場</span>
+          <select id="filter-theater"><option value="">すべて</option></select>
+        </label>
+        <button class="text-link" id="filter-reset">条件をリセット</button>
+      </div>
+    </div>
+    <div class="kangeki-list" id="kangeki-list"></div>
+  </section>
+
+    <!-- 抽選タブのページ(最初は隠しておく) -->
+  <section class="page" id="chusen-page">
+    <div class="list-header">
+      <div class="list-header-row">
+        <h2 id="chusen-list-month"></h2>
+        <button class="filter-btn" id="chusen-filter-btn">🔍 条件を絞る</button>
+      </div>
+
+      <!-- 「条件を絞る」を押すと開く -->
+      <div class="filter-panel" id="chusen-filter-panel">
+        <label class="filter-item">
+          <span>年</span>
+          <select id="chusen-filter-year"><option value="">すべて</option></select>
+        </label>
+        <label class="filter-item">
+          <span>状況</span>
+          <select id="chusen-filter-status">
+            <option value="">すべて</option>
+            <option value="applied">申込中</option>
+            <option value="won">当選・入金待ち</option>
+            <option value="paid">入金済み</option>
+          </select>
+        </label>
+        <button class="text-link" id="chusen-filter-reset">条件をリセット</button>
+      </div>
+    </div>
+    <div class="kangeki-list" id="chusen-list"></div>
+  </section>
+
+  <!-- 下のナビゲーション -->
+  <nav class="bottom-nav">
+    <button class="nav-item" data-page="chusen">
+      <span class="nav-icon"><img src="ticket.png" alt=""></span>
+      <span>抽選</span>
+    </button>
+    <button class="nav-item active" data-page="home">
+      <span class="nav-icon"><img src="home.png" alt=""></span>
+      <span>ホーム</span>
+    </button>
+    <button class="nav-item" data-page="kangeki">
+      <span class="nav-icon"><img src="kangeki.png" alt=""></span>
+      <span>観劇</span>
+    </button>
+  </nav>
+
+  <!-- 右下の追加ボタン -->
+  <button class="fab" id="add-btn" aria-label="記録を追加">+</button>
+
+  <!-- 記録を追加の画面(最初は隠しておく) -->
+  <section class="add-screen" id="add-screen">
+    <div class="add-header">
+      <button class="close-btn" id="close-btn" aria-label="閉じる">×</button>
+      <h2 id="add-title">記録を追加</h2>
+    </div>
+
+    <p class="add-label">カテゴリを選んでください</p>
+    <div class="category-list">
+      <button class="category-btn" data-category="chusen">
+        <span class="category-icon"><img src="ticket.png" alt=""></span>
+        <span>抽選期間</span>
+      </button>
+      <button class="category-btn" data-category="kangeki">
+        <span class="category-icon"><img src="kangeki.png" alt=""></span>
+        <span>観劇</span>
+      </button>
+    </div>
+
+    <!-- 抽選期間のフォーム -->
+    <div class="form" id="chusen-form">
+      <label class="field">
+        <span class="field-label">作品名 *</span>
+        <input type="text" id="chusen-title" placeholder="作品名を入力">
+      </label>
+
+      <p class="form-section">抽選期間</p>
+      <label class="field">
+        <span class="field-label">抽選開始日</span>
+        <input type="date" id="chusen-start">
+      </label>
+
+      <div class="arrow">↓</div>
+
+      <label class="field">
+        <span class="field-label">抽選締切日</span>
+        <input type="date" id="chusen-end">
+      </label>
+
+      <p class="form-section">当落発表</p>
+      <label class="field">
+        <span class="field-label">当落発表日</span>
+        <input type="date" id="result-date">
+      </label>
+
+      <!-- タップで開閉する入金のバー -->
+      <details class="accordion">
+        <summary>入金(分かっている場合のみ)</summary>
+        <label class="field">
+          <span class="field-label">入金期限</span>
+          <input type="date" id="pay-deadline">
+        </label>
+        <label class="field">
+          <span class="field-label">金額(円)</span>
+          <input type="number" id="pay-amount" min="0" inputmode="numeric" placeholder="0">
+        </label>
+      </details>
+
+      <span class="field-label">カレンダーに表示する色</span>
+      <div class="color-list">
+        <button class="color-btn selected" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
+        <button class="color-btn" data-color="#1f5fe0" style="background:#1f5fe0" aria-label="青"></button>
+        <button class="color-btn" data-color="#f05a1a" style="background:#f05a1a" aria-label="オレンジ"></button>
+        <button class="color-btn" data-color="#f2a07b" style="background:#f2a07b" aria-label="うすいオレンジ"></button>
+        <button class="color-btn" data-color="#5c1a2b" style="background:#5c1a2b" aria-label="ワインレッド"></button>
+      </div>
+
+      <label class="field">
+        <span class="field-label">メモ</span>
+        <textarea id="chusen-memo" rows="3"></textarea>
+      </label>
+
+      <button class="save-btn" id="save-btn">✓ 保存</button>
+    </div>
+
+    <!-- 観劇のフォーム -->
+    <div class="form" id="kangeki-form">
+      <label class="field">
+        <span class="field-label">作品名 *</span>
+        <input type="text" id="kangeki-title" placeholder="作品名を入力">
+      </label>
+
+      <label class="field">
+        <span class="field-label">観劇日 *</span>
+        <input type="date" id="kangeki-date">
+      </label>
+
+      <label class="field">
+        <span class="field-label">劇場名</span>
+        <input type="text" id="kangeki-theater" placeholder="例:東京建物 Brillia HALL">
+      </label>
+
+        <!-- 開場・開演時間を横に並べる -->
+      <div class="time-row">
+        <label class="field">
+          <span class="field-label">開場時間</span>
+          <input type="text" id="open-time" class="time-input" data-label="開場時間" data-step="15" data-default="12:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="field-label">開演時間</span>
+        <input type="text" id="start-time" class="time-input" data-label="開演時間" data-step="30" data-default="13:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
+        </label>
+      </div>
+
+      <!-- グッズリスト(最初から開いておく) -->
+      <details class="accordion" open>
+        <summary>グッズ</summary>
+        <div class="goods-row goods-head">
+          <span>品名</span><span>単価(円)</span><span>数量</span><span></span>
+        </div>
+        <div id="goods-list"></div>
+        <button type="button" class="add-goods-btn" id="add-goods-btn">+ グッズを追加</button>
+        <p class="goods-total">合計 <span id="goods-total">¥0</span></p>
+      </details>
+
+      <span class="field-label">カレンダーに表示する色</span>
+      <div class="color-list">
+        <button class="color-btn selected" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
+        <button class="color-btn" data-color="#1f5fe0" style="background:#1f5fe0" aria-label="青"></button>
+        <button class="color-btn" data-color="#f05a1a" style="background:#f05a1a" aria-label="オレンジ"></button>
+        <button class="color-btn" data-color="#f2a07b" style="background:#f2a07b" aria-label="うすいオレンジ"></button>
+        <button class="color-btn" data-color="#5c1a2b" style="background:#5c1a2b" aria-label="ワインレッド"></button>
+      </div>
+
+      <label class="field">
+        <span class="field-label">メモ</span>
+        <textarea id="kangeki-memo" rows="3"></textarea>
+      </label>
+
+      <button class="save-btn" id="kangeki-save-btn">✓ 保存</button>
+    </div>
+  </section>
+
+  <!-- 予定の詳細画面(最初は隠しておく) -->
+  <section class="add-screen" id="detail-screen">
+    <div class="add-header">
+      <button class="close-btn" id="detail-close-btn" aria-label="閉じる">×</button>
+      <h2>予定の詳細</h2>
+    </div>
+
+    <!-- ここに、タップした予定の情報をscript.jsで入れる -->
+    <div id="detail-body"></div>
+
+    <!-- 抽選の状況に合わせたボタン(観劇日の詳細を入力する など)をscript.jsで入れる -->
+    <div class="status-actions" id="status-actions"></div>
+
+    <button class="hensyuu-btn" id="edit-btn">編集する</button>
+    <button class="delete-btn" id="delete-btn">この予定を削除する</button>
+  </section>
+
+  <!-- 抽選から観劇の詳細を入力する画面(最初は隠しておく) -->
+  <section class="add-screen" id="win-screen">
+    <div class="add-header">
+      <button class="close-btn" id="win-close-btn" aria-label="閉じる">×</button>
+      <h2>観劇の詳細を入力</h2>
+    </div>
+
+    <div class="form show">
+      <label class="field">
+        <span class="field-label">作品名</span>
+        <input type="text" id="win-title" readonly>
+      </label>
+
+      <label class="field">
+        <span class="field-label">観劇日 *</span>
+        <input type="date" id="win-date">
+      </label>
+
+      <label class="field">
+        <span class="field-label">劇場名</span>
+        <input type="text" id="win-theater" placeholder="例:東京建物 Brillia HALL">
+      </label>
+
+        <div class="time-row">
+        <label class="field">
+          <span class="field-label">開場時間</span>
+          <input type="text" id="win-open-time" class="time-input" data-label="開場時間" data-step="15" data-default="12:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
+          <span class="field-label">開演時間</span>
+          <input type="text" id="win-start-time" class="time-input" data-label="開演時間" data-step="30" data-default="13:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
+        </label>
+      </div>
+
+      <p class="form-section">入金</p>
+      <label class="field">
+        <span class="field-label">入金期限</span>
+        <input type="date" id="win-pay-deadline">
+      </label>
+      <label class="field">
+        <span class="field-label">金額(円)</span>
+        <input type="number" id="win-pay-amount" min="0" inputmode="numeric" placeholder="0">
+      </label>
+
+      <button class="save-btn" id="win-save-btn">✓ 保存</button>
+    </div>
+  </section>
+
+      <!-- 時間を選ぶ小さな窓(開場・開演時間の欄の下に出てくる) -->
+  <div class="time-sheet-bg" id="time-sheet-bg">
+    <div class="time-sheet" id="time-sheet">
+      <!-- スライドで選ぶ -->
+      <div class="ts-wheels" id="ts-wheels">
+        <div class="ts-band"></div>
+        <div class="ts-col" id="ts-hour"></div>
+        <span class="ts-colon">:</span>
+        <div class="ts-col" id="ts-minute"></div>
+      </div>
+
+      <div class="ts-footer">
+        <button class="ts-cancel" id="ts-cancel">キャンセル</button>
+        <button class="ts-ok" id="ts-ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
