@@ -10,6 +10,7 @@
   <!-- 上のタブ -->
   <nav class="top-tabs">
     <button class="tab active">カレンダー</button>
+    <button class="tab">マイリスト</button>
   </nav>
 
   <!-- カレンダー -->
@@ -57,7 +58,7 @@
     <div class="kangeki-list" id="kangeki-list"></div>
   </section>
 
-    <!-- 抽選タブのページ(最初は隠しておく) -->
+  <!-- 抽選タブのページ(最初は隠しておく) -->
   <section class="page" id="chusen-page">
     <div class="list-header">
       <div class="list-header-row">
@@ -165,11 +166,17 @@
 
       <span class="field-label">カレンダーに表示する色</span>
       <div class="color-list">
-        <button class="color-btn selected" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
+        <button class="color-btn selected" data-color="#e53935" style="background:#e53935" aria-label="赤"></button>
+        <button class="color-btn" data-color="#ec6a9c" style="background:#ec6a9c" aria-label="ピンク"></button>
+        <button class="color-btn" data-color="#f57c1f" style="background:#f57c1f" aria-label="オレンジ"></button>
+        <button class="color-btn" data-color="#e0a800" style="background:#e0a800" aria-label="山吹色"></button>
+        <button class="color-btn" data-color="#43a047" style="background:#43a047" aria-label="緑"></button>
+        <button class="color-btn" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
         <button class="color-btn" data-color="#1f5fe0" style="background:#1f5fe0" aria-label="青"></button>
-        <button class="color-btn" data-color="#f05a1a" style="background:#f05a1a" aria-label="オレンジ"></button>
-        <button class="color-btn" data-color="#f2a07b" style="background:#f2a07b" aria-label="うすいオレンジ"></button>
-        <button class="color-btn" data-color="#5c1a2b" style="background:#5c1a2b" aria-label="ワインレッド"></button>
+        <button class="color-btn" data-color="#8e44ad" style="background:#8e44ad" aria-label="紫"></button>
+        <label class="color-btn color-custom" aria-label="好きな色を選ぶ">
+          <input type="color" class="color-picker" value="#da3a62">
+        </label>
       </div>
 
       <label class="field">
@@ -197,7 +204,7 @@
         <input type="text" id="kangeki-theater" placeholder="例:東京建物 Brillia HALL">
       </label>
 
-        <!-- 開場・開演時間を横に並べる -->
+      <!-- 開場・開演時間を横に並べる -->
       <div class="time-row">
         <label class="field">
           <span class="field-label">開場時間</span>
@@ -205,7 +212,7 @@
         </label>
         <label class="field">
           <span class="field-label">開演時間</span>
-        <input type="text" id="start-time" class="time-input" data-label="開演時間" data-step="30" data-default="13:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
+          <input type="text" id="start-time" class="time-input" data-label="開演時間" data-step="30" data-default="13:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
         </label>
       </div>
 
@@ -222,11 +229,17 @@
 
       <span class="field-label">カレンダーに表示する色</span>
       <div class="color-list">
-        <button class="color-btn selected" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
+        <button class="color-btn selected" data-color="#e53935" style="background:#e53935" aria-label="赤"></button>
+        <button class="color-btn" data-color="#ec6a9c" style="background:#ec6a9c" aria-label="ピンク"></button>
+        <button class="color-btn" data-color="#f57c1f" style="background:#f57c1f" aria-label="オレンジ"></button>
+        <button class="color-btn" data-color="#e0a800" style="background:#e0a800" aria-label="山吹色"></button>
+        <button class="color-btn" data-color="#43a047" style="background:#43a047" aria-label="緑"></button>
+        <button class="color-btn" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
         <button class="color-btn" data-color="#1f5fe0" style="background:#1f5fe0" aria-label="青"></button>
-        <button class="color-btn" data-color="#f05a1a" style="background:#f05a1a" aria-label="オレンジ"></button>
-        <button class="color-btn" data-color="#f2a07b" style="background:#f2a07b" aria-label="うすいオレンジ"></button>
-        <button class="color-btn" data-color="#5c1a2b" style="background:#5c1a2b" aria-label="ワインレッド"></button>
+        <button class="color-btn" data-color="#8e44ad" style="background:#8e44ad" aria-label="紫"></button>
+        <label class="color-btn color-custom" aria-label="好きな色を選ぶ">
+          <input type="color" class="color-picker" value="#da3a62">
+        </label>
       </div>
 
       <label class="field">
@@ -278,10 +291,12 @@
         <input type="text" id="win-theater" placeholder="例:東京建物 Brillia HALL">
       </label>
 
-        <div class="time-row">
+      <div class="time-row">
         <label class="field">
           <span class="field-label">開場時間</span>
           <input type="text" id="win-open-time" class="time-input" data-label="開場時間" data-step="15" data-default="12:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
+        </label>
+        <label class="field">
           <span class="field-label">開演時間</span>
           <input type="text" id="win-start-time" class="time-input" data-label="開演時間" data-step="30" data-default="13:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
         </label>
@@ -301,7 +316,7 @@
     </div>
   </section>
 
-      <!-- 時間を選ぶ小さな窓(開場・開演時間の欄の下に出てくる) -->
+  <!-- 時間を選ぶ小さな窓(開場・開演時間の欄の下に出てくる) -->
   <div class="time-sheet-bg" id="time-sheet-bg">
     <div class="time-sheet" id="time-sheet">
       <!-- スライドで選ぶ -->
@@ -322,4 +337,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-
