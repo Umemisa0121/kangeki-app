@@ -1139,14 +1139,12 @@ function closeTimePicker(apply) {
 }
 
 document.querySelectorAll(".time-input").forEach((el) => {
+  // スマホではキーボードを出さず、スライドだけで選ぶ(パソコンは今まで通り打てる)
+  if (window.matchMedia("(pointer: coarse)").matches) el.inputMode = "none";
+
   el.addEventListener("focus", () => openTimePicker(el));
-  // 手で打ったら、2けた目のあとに「:」を自動で入れて、スライドもその時間に動かす
+  // 手で打ったら、スライドもその時間に動かす
   el.addEventListener("input", () => {
-    const digits = el.value
-      .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)) // 全角数字→半角
-      .replace(/\D/g, "")   // 数字以外を取りのぞく
-      .slice(0, 4);         // 4けたまで
-    el.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
     tsWheelTouched = false;
     syncWheelFromInput();
   });
