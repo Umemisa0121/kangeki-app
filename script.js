@@ -72,6 +72,10 @@ function renderCalendar() {
     daysEl.appendChild(empty);
   }
 
+    // 予定ごとに、上から何段目に出すかを月の中で決めておく(日が変わっても同じ段に出す)
+  const monthStart = toDateString(currentYear, currentMonth, 1);
+  const monthEnd = toDateString(currentYear, currentMonth, lastDate);
+  const lanes = assignLanes(events.filter((ev) => ev.start <= monthEnd && monthStart <= ev.end));
   const today = new Date();
   for (let date = 1; date <= lastDate; date++) {
     const day = document.createElement("div");
@@ -97,22 +101,33 @@ function renderCalendar() {
       day.classList.add("today");
     }
 
-    // この日が期間に入っている予定を探して、色のバーを出す
+        // この日が期間に入っている予定を探して、色のバーを出す
     const dateStr = toDateString(currentYear, currentMonth, date);
     const dayEvents = events.filter((ev) => ev.start <= dateStr && dateStr <= ev.end);
-
-    dayEvents.forEach((ev) => {
+    
+        // 段の順番にバーを並べる(その日に予定がない段は、見えない空のバーで場所をあける)
+    const rowCount = Math.max(0, ...dayEvents.map((ev) => lanes.get(ev.id) + 1));
+    for (let lane = 0; lane < rowCount; lane++) {
+      const ev = dayEvents.find((e) => lanes.get(e.id) === lane);
       const bar = document.createElement("div");
+      if (!ev) {
+        bar.className = "event-bar spacer";
+        day.appendChild(bar);
+        continue;
+      }
       bar.className = "event-bar";
       bar.style.background = displayColor(ev);
-      // 期間の初日だけ作品名を表示
-      if (dateStr === ev.start) {
+      // 始まりと終わりの日は角を丸くして、となりの予定と区別できるようにする
+      if (dateStr === ev.start) bar.classList.add("bar-start");
+      if (dateStr === ev.end) bar.classList.add("bar-end");
+      // 期間の初日と、週の始まり(日曜)・月の初日に作品名を表示
+      if (dateStr === ev.start || weekday === 0 || date === 1) {
         bar.textContent = ev.title;
       }
       // タップしたら詳細画面を開く
       bar.addEventListener("click", () => openDetail(ev.id));
       day.appendChild(bar);
-    });
+    }
 
     // 当落発表日に、当落の印を出す(点線の枠)
     events
@@ -137,9 +152,24 @@ function renderCalendar() {
   // 観劇タブ・抽選タブのリストも最新の状態にする
   renderKangekiList(false);
   renderChusenList(false);
-
   // 入力欄の候補も最新の状態にする
   updateSuggestions();
+}
+
+
+// 予定ごとに、使う段(上から0, 1, 2…段目)を決める
+// 早く始まる予定から順に、空いている一番上の段に入れていく
+function assignLanes(list) {
+  const sorted = [...list].sort((a, b) => a.start.localeCompare(b.start) || b.end.localeCompare(a.end));
+  const laneEnds = []; // 各段の、最後の予定が終わる日
+  const lanes = new Map();
+  sorted.forEach((ev) => {
+    let lane = laneEnds.findIndex((end) => end < ev.start);
+    if (lane === -1) lane = laneEnds.length;
+    laneEnds[lane] = ev.end;
+    lanes.set(ev.id, lane);
+  });
+  return lanes;
 }
 
 // 前月ボタン
@@ -179,6 +209,7 @@ function resetAddScreen() {
   categoryButtons.forEach((b) => b.classList.remove("selected"));
   selectedCategory = null;
   editingId = null;
+  colorChosenByUser = false;
   addTitle.textContent = "記録を追加";
   [chusenForm, kangekiForm].forEach((form) => {
     form.classList.remove("show");
@@ -216,14 +247,18 @@ categoryButtons.forEach((btn) => {
 });
 
 // ===== 色の選択(フォームごとに1つ選べる) =====
+let colorChosenByUser = false; // 自分で色を選んだかどうか(選んだら自動では変えない)
+
 // 色のボタンを選択状態にする
 function selectColorBtn(btn) {
+  colorChosenByUser = true;
   btn.closest(".color-list").querySelectorAll(".color-btn").forEach((b) => {
     b.classList.remove("selected");
   });
   btn.classList.add("selected");
 }
 
+// よく使う色のボタン
 // よく使う色のボタン
 document.querySelectorAll(".color-btn:not(.color-custom)").forEach((btn) => {
   btn.addEventListener("click", () => selectColorBtn(btn));
@@ -268,6 +303,39 @@ function setSelectedColor(form, color) {
 }
 
 // ===== グッズリスト =====
+// ===== 重なっている予定と色が被らないように、自動で色を選ぶ =====
+// 期間が重なる予定で使われていない色を選ぶ(全部使われていたら、一番使われていない色)
+function autoPickColor(form, start, end) {
+  if (colorChosenByUser || editingId !== null) return; // 自分で選んだときと編集のときは変えない
+  if (!start) return;
+  if (!end || end < start) end = start;
+
+  const usedColors = events
+    .filter((ev) => ev.start <= end && start <= ev.end)
+    .map((ev) => ev.color);
+
+  const presets = [...form.querySelectorAll(".color-btn:not(.color-custom)")].map((b) => b.dataset.color);
+  const count = (c) => usedColors.filter((u) => u === c).length;
+  const best = presets.reduce((a, b) => (count(b) < count(a) ? b : a));
+  setSelectedColor(form, best);
+}
+
+// 日付を入れたら、色を選び直す
+["chusen-start", "chusen-end"].forEach((id) => {
+  document.getElementById(id).addEventListener("change", () => {
+    autoPickColor(
+      chusenForm,
+      document.getElementById("chusen-start").value,
+      document.getElementById("chusen-end").value
+    );
+  });
+});
+
+document.getElementById("kangeki-date").addEventListener("change", () => {
+  const date = document.getElementById("kangeki-date").value;
+  autoPickColor(kangekiForm, date, date);
+});
+
 // グッズの入力行を1行追加する
 // (編集のときは、保存してあったグッズ g の中身を入れた状態で追加する)
 function addGoodsRow(g) {
@@ -1226,6 +1294,37 @@ function normalizeTime(text) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+// ===== 前に入れた言葉を、入力欄の候補に出す =====
+// 候補のリスト(datalist)を作る
+function makeSuggestList(id) {
+  const list = document.createElement("datalist");
+  list.id = id;
+  document.body.appendChild(list);
+  return list;
+}
+
+const titleSuggest = makeSuggestList("title-suggest");     // 作品名
+const theaterSuggest = makeSuggestList("theater-suggest"); // 会場名
+const goodsSuggest = makeSuggestList("goods-suggest");     // グッズの品名
+
+// 入力欄と候補のリストをつなぐ
+function connectSuggest(ids, listId) {
+  ids.forEach((id) => {
+    const input = document.getElementById(id);
+    input.setAttribute("list", listId);
+    input.setAttribute("autocomplete", "off"); // ブラウザの候補と重ならないようにする
+  });
+}
+connectSuggest(["chusen-title", "kangeki-title"], "title-suggest");
+connectSuggest(["kangeki-theater", "win-theater"], "theater-suggest");
+// グッズの品名は、行を追加するとき(addGoodsRow)につないでいる
+
+// 言葉を、同じものは1つにまとめて候補に入れる
+function fillSuggest(list, words) {
+  const unique = [...new Set(words.map((w) => (w || "").trim()).filter(Boolean))];
+  list.innerHTML = unique.map((w) => `<option value="${escapeHtml(w)}"></option>`).join("");
+}
+
 // 保存してある予定から候補を作り直す(新しく入れたものほど上に出す)
 function updateSuggestions() {
   const recent = [...events].reverse();
@@ -1233,6 +1332,6 @@ function updateSuggestions() {
   fillSuggest(theaterSuggest, recent.map((ev) => ev.theater));
   fillSuggest(goodsSuggest, recent.flatMap((ev) => (ev.goods || []).map((g) => g.name)));
 }
+
 // ===== 最初に1回描画する =====
 renderCalendar();
-
