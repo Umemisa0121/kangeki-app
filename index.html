@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>観劇スケジュール帳</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
   <!-- 上のタブ -->
@@ -57,7 +57,7 @@
     <div class="kangeki-list" id="kangeki-list"></div>
   </section>
 
-  <!-- 抽選タブのページ(最初は隠しておく) -->
+    <!-- 抽選タブのページ(最初は隠しておく) -->
   <section class="page" id="chusen-page">
     <div class="list-header">
       <div class="list-header-row">
@@ -204,7 +204,7 @@
         <input type="text" id="kangeki-theater" placeholder="例:東京建物 Brillia HALL">
       </label>
 
-      <!-- 開場・開演時間を横に並べる -->
+        <!-- 開場・開演時間を横に並べる -->
       <div class="time-row">
         <label class="field">
           <span class="field-label">開場時間</span>
@@ -212,7 +212,7 @@
         </label>
         <label class="field">
           <span class="field-label">開演時間</span>
-          <input type="text" id="start-time" class="time-input" data-label="開演時間" data-step="30" data-default="13:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
+        <input type="text" id="start-time" class="time-input" data-label="開演時間" data-step="30" data-default="13:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
         </label>
       </div>
 
@@ -291,12 +291,10 @@
         <input type="text" id="win-theater" placeholder="例:東京建物 Brillia HALL">
       </label>
 
-      <div class="time-row">
+        <div class="time-row">
         <label class="field">
           <span class="field-label">開場時間</span>
           <input type="text" id="win-open-time" class="time-input" data-label="開場時間" data-step="15" data-default="12:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
-        </label>
-        <label class="field">
           <span class="field-label">開演時間</span>
           <input type="text" id="win-start-time" class="time-input" data-label="開演時間" data-step="30" data-default="13:00" placeholder="--:--" inputmode="numeric" autocomplete="off">
         </label>
@@ -316,7 +314,7 @@
     </div>
   </section>
 
-  <!-- 時間を選ぶ小さな窓(開場・開演時間の欄の下に出てくる) -->
+      <!-- 時間を選ぶ小さな窓(開場・開演時間の欄の下に出てくる) -->
   <div class="time-sheet-bg" id="time-sheet-bg">
     <div class="time-sheet" id="time-sheet">
       <!-- スライドで選ぶ -->
@@ -334,6 +332,6 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=6"></script>
 </body>
 </html>
