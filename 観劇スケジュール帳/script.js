@@ -25,6 +25,7 @@ const STATUS_LABELS = {
   applied: "申込中",
   won: "当選・入金待ち",
   paid: "入金済み",
+  lost: "落選",
 };
 
 // 状況が保存されていない(前に作った)抽選は「申込中」として扱う
@@ -72,6 +73,11 @@ function renderCalendar() {
     daysEl.appendChild(empty);
   }
 
+  // 予定ごとに、上から何段目に出すかを月の中で決めておく(日が変わっても同じ段に出す)
+  const monthStart = toDateString(currentYear, currentMonth, 1);
+  const monthEnd = toDateString(currentYear, currentMonth, lastDate);
+  const lanes = assignLanes(events.filter((ev) => ev.start <= monthEnd && monthStart <= ev.end));
+
   const today = new Date();
   for (let date = 1; date <= lastDate; date++) {
     const day = document.createElement("div");
@@ -88,6 +94,15 @@ function renderCalendar() {
     if (weekday === 0) day.classList.add("sun");
     if (weekday === 6) day.classList.add("sat");
 
+    // 祝日なら赤くして、数字の下に祝日の名前を出す
+    // (祝日でない日も同じ高さの空の欄を入れて、バーの位置をそろえる)
+    const holiday = holidayName(toDateString(currentYear, currentMonth, date));
+    if (holiday) day.classList.add("holiday");
+    const label = document.createElement("span");
+    label.className = "day-holiday";
+    label.textContent = holiday;
+    day.appendChild(label);
+
     // 今日の日付
     if (
       currentYear === today.getFullYear() &&
@@ -101,24 +116,38 @@ function renderCalendar() {
     const dateStr = toDateString(currentYear, currentMonth, date);
     const dayEvents = events.filter((ev) => ev.start <= dateStr && dateStr <= ev.end);
 
-    dayEvents.forEach((ev) => {
+    // 段の順番にバーを並べる(その日に予定がない段は、見えない空のバーで場所をあける)
+    const rowCount = Math.max(0, ...dayEvents.map((ev) => lanes.get(ev.id) + 1));
+    for (let lane = 0; lane < rowCount; lane++) {
+      const ev = dayEvents.find((e) => lanes.get(e.id) === lane);
       const bar = document.createElement("div");
+      if (!ev) {
+        bar.className = "event-bar spacer";
+        day.appendChild(bar);
+        continue;
+      }
       bar.className = "event-bar";
       bar.style.background = displayColor(ev);
-      // 期間の初日だけ作品名を表示
-      if (dateStr === ev.start) {
+      if (getStatus(ev) === "lost") bar.classList.add("lost"); // 落選した抽選は薄く表示
+      // 始まりと終わりの日は角を丸くして、となりの予定と区別できるようにする
+      if (dateStr === ev.start) bar.classList.add("bar-start");
+      if (dateStr === ev.end) bar.classList.add("bar-end");
+      // 期間の初日と、週の始まり(日曜)・月の初日に作品名を表示
+      if (dateStr === ev.start || weekday === 0 || date === 1) {
         bar.textContent = ev.title;
       }
       // タップしたら詳細画面を開く
       bar.addEventListener("click", () => openDetail(ev.id));
       day.appendChild(bar);
-    });
+    }
 
     // 当落発表日に、当落の印を出す(点線の枠)
     events
       .filter((ev) => ev.resultDate === dateStr)
       .forEach((ev) => {
-        day.appendChild(makeOutlineBar(ev, "result-bar", `当落 ${ev.title}`));
+        const bar = makeOutlineBar(ev, "result-bar", `当落 ${ev.title}`);
+        if (getStatus(ev) === "lost") bar.classList.add("lost"); // 落選した抽選は薄く表示
+        day.appendChild(bar);
       });
 
     // 入金期限の日に、入金の印を出す(実線の枠)
@@ -137,6 +166,24 @@ function renderCalendar() {
   // 観劇タブ・抽選タブのリストも最新の状態にする
   renderKangekiList(false);
   renderChusenList(false);
+
+  // 入力欄の候補も最新の状態にする
+  updateSuggestions();
+}
+
+// 予定ごとに、使う段(上から0, 1, 2…段目)を決める
+// 早く始まる予定から順に、空いている一番上の段に入れていく
+function assignLanes(list) {
+  const sorted = [...list].sort((a, b) => a.start.localeCompare(b.start) || b.end.localeCompare(a.end));
+  const laneEnds = []; // 各段の、最後の予定が終わる日
+  const lanes = new Map();
+  sorted.forEach((ev) => {
+    let lane = laneEnds.findIndex((end) => end < ev.start);
+    if (lane === -1) lane = laneEnds.length;
+    laneEnds[lane] = ev.end;
+    lanes.set(ev.id, lane);
+  });
+  return lanes;
 }
 
 // 前月ボタン
@@ -176,6 +223,7 @@ function resetAddScreen() {
   categoryButtons.forEach((b) => b.classList.remove("selected"));
   selectedCategory = null;
   editingId = null;
+  colorChosenByUser = false;
   addTitle.textContent = "記録を追加";
   [chusenForm, kangekiForm].forEach((form) => {
     form.classList.remove("show");
@@ -213,12 +261,34 @@ categoryButtons.forEach((btn) => {
 });
 
 // ===== 色の選択(フォームごとに1つ選べる) =====
-document.querySelectorAll(".color-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    btn.closest(".color-list").querySelectorAll(".color-btn").forEach((b) => {
-      b.classList.remove("selected");
-    });
-    btn.classList.add("selected");
+let colorChosenByUser = false; // 自分で色を選んだかどうか(選んだら自動では変えない)
+
+// 色のボタンを選択状態にする
+function selectColorBtn(btn) {
+  colorChosenByUser = true;
+  btn.closest(".color-list").querySelectorAll(".color-btn").forEach((b) => {
+    b.classList.remove("selected");
+  });
+  btn.classList.add("selected");
+}
+
+// よく使う色のボタン
+document.querySelectorAll(".color-btn:not(.color-custom)").forEach((btn) => {
+  btn.addEventListener("click", () => selectColorBtn(btn));
+});
+
+// 🎨ボタンに、選んだ色をセットする
+function setCustomColor(label, color) {
+  label.dataset.color = color;
+  label.style.background = color;
+  label.querySelector(".color-picker").value = color;
+}
+
+// 🎨ボタンで色を選んだら、その色を選択状態にする
+document.querySelectorAll(".color-custom").forEach((label) => {
+  label.querySelector(".color-picker").addEventListener("input", (e) => {
+    setCustomColor(label, e.target.value);
+    selectColorBtn(label);
   });
 });
 
@@ -228,11 +298,55 @@ function getSelectedColor(form) {
 }
 
 // そのフォームで、指定した色を選択状態にする(編集のときに使う)
+// よく使う色になければ、🎨ボタンにその色を入れて選択する
 function setSelectedColor(form, color) {
-  form.querySelectorAll(".color-btn").forEach((b) => {
-    b.classList.toggle("selected", b.dataset.color === color);
+  let found = false;
+  form.querySelectorAll(".color-btn:not(.color-custom)").forEach((b) => {
+    const match = b.dataset.color === color;
+    b.classList.toggle("selected", match);
+    if (match) found = true;
   });
+  const custom = form.querySelector(".color-custom");
+  custom.classList.toggle("selected", !found);
+  if (found) {
+    custom.style.background = ""; // よく使う色なら、🎨ボタンは虹色に戻す
+  } else {
+    setCustomColor(custom, color);
+  }
 }
+
+// ===== 重なっている予定と色が被らないように、自動で色を選ぶ =====
+// 期間が重なる予定で使われていない色を選ぶ(全部使われていたら、一番使われていない色)
+function autoPickColor(form, start, end) {
+  if (colorChosenByUser || editingId !== null) return; // 自分で選んだときと編集のときは変えない
+  if (!start) return;
+  if (!end || end < start) end = start;
+
+  const usedColors = events
+    .filter((ev) => ev.start <= end && start <= ev.end)
+    .map((ev) => ev.color);
+
+  const presets = [...form.querySelectorAll(".color-btn:not(.color-custom)")].map((b) => b.dataset.color);
+  const count = (c) => usedColors.filter((u) => u === c).length;
+  const best = presets.reduce((a, b) => (count(b) < count(a) ? b : a));
+  setSelectedColor(form, best);
+}
+
+// 日付を入れたら、色を選び直す
+["chusen-start", "chusen-end"].forEach((id) => {
+  document.getElementById(id).addEventListener("change", () => {
+    autoPickColor(
+      chusenForm,
+      document.getElementById("chusen-start").value,
+      document.getElementById("chusen-end").value
+    );
+  });
+});
+
+document.getElementById("kangeki-date").addEventListener("change", () => {
+  const date = document.getElementById("kangeki-date").value;
+  autoPickColor(kangekiForm, date, date);
+});
 
 // ===== グッズリスト =====
 // グッズの入力行を1行追加する
@@ -241,7 +355,7 @@ function addGoodsRow(g) {
   const row = document.createElement("div");
   row.className = "goods-row";
   row.innerHTML = `
-    <input type="text" class="goods-name" placeholder="品名">
+    <input type="text" class="goods-name" placeholder="品名" list="goods-suggest" autocomplete="off">
     <input type="number" class="goods-price" placeholder="0" min="0" inputmode="numeric">
     <input type="number" class="goods-qty" value="1" min="1" inputmode="numeric">
     <button type="button" class="goods-delete" aria-label="この行を削除">×</button>
@@ -433,7 +547,7 @@ function openDetail(id) {
   } else {
     html += detailRow("カテゴリ", "観劇");
     html += detailRow("観劇日", formatDate(ev.start));
-    html += detailRow("劇場", ev.theater);
+    html += detailRow("会場", ev.theater);
     html += detailRow("開場時間", ev.openTime);
     html += detailRow("開演時間", ev.startTime);
 
@@ -512,6 +626,14 @@ function ticketButton(id, title, sub) {
     </button>`;
 }
 
+// 抽選の状況を変えて保存し、画面を描き直す
+function changeStatus(ev, status) {
+  ev.status = status;
+  saveEvents();
+  renderCalendar();
+  openDetail(ev.id);
+}
+
 function renderStatusActions(ev) {
   statusActions.innerHTML = "";
   if (ev.category !== "chusen") return; // 観劇の予定にはボタンなし
@@ -524,9 +646,19 @@ function renderStatusActions(ev) {
       statusActions.innerHTML = `<div class="wait-box">${waitMessage(ev)}</div>`;
     } else {
       // 当落発表の日から:当選したら、ここから観劇日の詳細を入力する
-      statusActions.innerHTML = ticketButton("detail-input-btn", "観劇日の詳細を入力する", "当選したらここから");
+      statusActions.innerHTML =
+        ticketButton("detail-input-btn", "観劇日の詳細を入力する", "当選したらここから") +
+        `<button class="lost-btn" id="lost-btn">落選した</button>`;
       document.getElementById("detail-input-btn").addEventListener("click", () => openWinScreen(ev));
+      document.getElementById("lost-btn").addEventListener("click", () => changeStatus(ev, "lost"));
     }
+    return;
+  }
+
+  // 落選:まちがえて押したとき用に、申込中に戻せるようにする
+  if (status === "lost") {
+    statusActions.innerHTML = `<button class="text-link" id="undo-lost-btn">申込中に戻す</button>`;
+    document.getElementById("undo-lost-btn").addEventListener("click", () => changeStatus(ev, "applied"));
     return;
   }
 
@@ -866,6 +998,7 @@ const STATUS_CHIPS = {
   applied: "申込中",
   won: "入金待ち",
   paid: "入金済み",
+  lost: "落選",
 };
 
 // "2026-10-27" → "10/27"
@@ -878,7 +1011,7 @@ function shortDate(str) {
 // (入金済み、または当落発表日を過ぎても観劇日の詳細を入力していない)
 function isChusenDone(ev) {
   const status = getStatus(ev);
-  if (status === "paid") return true;
+  if (status === "paid" || status === "lost") return true;
   if (status === "applied") return todayString() > (ev.resultDate || ev.end);
   return false;
 }
@@ -889,6 +1022,7 @@ function chusenNextAction(ev) {
   const today = todayString();
 
   if (status === "paid") return "✓ 入金済み";
+  if (status === "lost") return "落選";
   if (status === "won") {
     if (!ev.payDeadline) return "💴 入金待ち";
     const n = daysUntil(ev.payDeadline);
@@ -1023,6 +1157,7 @@ function updateChusenFilterButton() {
   chusenFilterBtn.textContent = count ? `🔍 条件を絞る(${count})` : "🔍 条件を絞る";
   chusenFilterBtn.classList.toggle("active", count > 0);
 }
+
 // ===== 時間を選ぶ小さな窓 =====
 const tsBg = document.getElementById("time-sheet-bg");
 const tsSheet = document.getElementById("time-sheet");
@@ -1073,6 +1208,16 @@ function scrollColumnTo(col, value) {
       tsTarget.value = `${columnValue(tsHour)}:${columnValue(tsMinute)}`;
     }
   });
+  // マウスのホイール・トラックパッドは、1回で1つずつだけ動かす
+  let lastWheel = 0;
+  col.addEventListener("wheel", (e) => {
+    e.preventDefault(); // 勢いよく飛んでいかないようにする
+    const now = Date.now();
+    if (now - lastWheel < 150) return; // 速く回しても、0.15秒に1つまで
+    lastWheel = now;
+    const i = Math.round(col.scrollTop / ITEM_HEIGHT) + (e.deltaY > 0 ? 1 : -1);
+    col.scrollTo({ top: i * ITEM_HEIGHT, behavior: "smooth" });
+  }, { passive: false });
   // 数字をタップしたら、その数字まで動かす
   col.addEventListener("click", (e) => {
     const item = e.target.closest(".ts-item");
@@ -1139,14 +1284,12 @@ function closeTimePicker(apply) {
 }
 
 document.querySelectorAll(".time-input").forEach((el) => {
+  // スマホではキーボードを出さず、スライドだけで選ぶ(パソコンは今まで通り打てる)
+  if (window.matchMedia("(pointer: coarse)").matches) el.inputMode = "none";
+
   el.addEventListener("focus", () => openTimePicker(el));
-  // 手で打ったら、2けた目のあとに「:」を自動で入れて、スライドもその時間に動かす
+  // 手で打ったら、スライドもその時間に動かす
   el.addEventListener("input", () => {
-    const digits = el.value
-      .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0)) // 全角数字→半角
-      .replace(/\D/g, "")   // 数字以外を取りのぞく
-      .slice(0, 4);         // 4けたまで
-    el.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
     tsWheelTouched = false;
     syncWheelFromInput();
   });
@@ -1182,6 +1325,163 @@ function normalizeTime(text) {
   const m = Number(match[2] || 0);
   if (h > 23 || m > 59) return text;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+// ===== 劇場のリスト =====
+// 会場名の候補に出す劇場(足したいときは "劇場名", を1行足す)
+const THEATERS = [
+  // 東京
+  "東京宝塚劇場",
+  "日生劇場",
+  "シアタークリエ",
+  "明治座",
+  "新橋演舞場",
+  "歌舞伎座",
+  "東京建物 Brillia HALL",
+  "東京芸術劇場",
+  "サンシャイン劇場",
+  "東急シアターオーブ",
+  "THEATER MILANO-Za",
+  "新国立劇場",
+  "世田谷パブリックシアター",
+  "本多劇場",
+  "紀伊國屋ホール",
+  "紀伊國屋サザンシアター",
+  "天王洲 銀河劇場",
+  "日本青年館ホール",
+  "東京国際フォーラム",
+  "有楽町よみうりホール",
+  "シアター1010",
+  "IMM THEATER",
+  "品川プリンスホテル ステラボール",
+  "シアターGロッソ",
+  "KAAT神奈川芸術劇場",
+  "JR東日本四季劇場［春］",
+  "JR東日本四季劇場［秋］",
+  "電通四季劇場［海］",
+  "有明四季劇場",
+  // 大阪・兵庫
+  "梅田芸術劇場 メインホール",
+  "梅田芸術劇場 シアター・ドラマシティ",
+  "新歌舞伎座",
+  "フェスティバルホール",
+  "オリックス劇場",
+  "COOL JAPAN PARK OSAKA",
+  "宝塚大劇場",
+  "兵庫県立芸術文化センター",
+  // 名古屋・福岡
+  "御園座",
+  "博多座",
+  "キャナルシティ劇場",
+];
+
+// ===== 前に入れた言葉を、入力欄の候補に出す =====
+// 候補のリスト(datalist)を作る
+function makeSuggestList(id) {
+  const list = document.createElement("datalist");
+  list.id = id;
+  document.body.appendChild(list);
+  return list;
+}
+
+const titleSuggest = makeSuggestList("title-suggest");     // 作品名
+const theaterSuggest = makeSuggestList("theater-suggest"); // 会場名
+const goodsSuggest = makeSuggestList("goods-suggest");     // グッズの品名
+
+// 入力欄と候補のリストをつなぐ
+function connectSuggest(ids, listId) {
+  ids.forEach((id) => {
+    const input = document.getElementById(id);
+    input.setAttribute("list", listId);
+    input.setAttribute("autocomplete", "off"); // ブラウザの候補と重ならないようにする
+  });
+}
+connectSuggest(["chusen-title", "kangeki-title"], "title-suggest");
+connectSuggest(["kangeki-theater", "win-theater"], "theater-suggest");
+// グッズの品名は、行を追加するとき(addGoodsRow)につないでいる
+
+// 言葉を、同じものは1つにまとめて候補に入れる
+function fillSuggest(list, words) {
+  const unique = [...new Set(words.map((w) => (w || "").trim()).filter(Boolean))];
+  list.innerHTML = unique.map((w) => `<option value="${escapeHtml(w)}"></option>`).join("");
+}
+
+// 保存してある予定から候補を作り直す(新しく入れたものほど上に出す)
+function updateSuggestions() {
+  const recent = [...events].reverse();
+  fillSuggest(titleSuggest, recent.map((ev) => ev.title));
+  fillSuggest(theaterSuggest, [...recent.map((ev) => ev.theater), ...THEATERS]); // 前に入れた会場名＋劇場のリスト
+  fillSuggest(goodsSuggest, recent.flatMap((ev) => (ev.goods || []).map((g) => g.name)));
+}
+
+// ===== 日本の祝日 =====
+// 年ごとに祝日を計算して覚えておく("2026-01-01" → "元日")
+const holidayCache = {};
+
+// その日付の祝日の名前(祝日でなければ空)
+function holidayName(dateStr) {
+  const year = Number(dateStr.slice(0, 4));
+  if (!holidayCache[year]) holidayCache[year] = makeHolidays(year);
+  return holidayCache[year][dateStr] || "";
+}
+
+// その年の祝日をすべて作る
+function makeHolidays(year) {
+  const list = {};
+  const add = (month, date, name) => {
+    list[toDateString(year, month - 1, date)] = name;
+  };
+  // その月の第◯月曜日が何日か
+  const nthMonday = (month, n) => {
+    const first = new Date(year, month - 1, 1).getDay();
+    return 1 + ((8 - first) % 7) + (n - 1) * 7;
+  };
+  // 春分・秋分の日(計算で出す)
+  const y = year - 1980;
+  const shunbun = Math.floor(20.8431 + 0.242194 * y - Math.floor(y / 4));
+  const shubun = Math.floor(23.2488 + 0.242194 * y - Math.floor(y / 4));
+
+  add(1, 1, "元日");
+  add(1, nthMonday(1, 2), "成人の日");
+  add(2, 11, "建国記念の日");
+  add(2, 23, "天皇誕生日");
+  add(3, shunbun, "春分の日");
+  add(4, 29, "昭和の日");
+  add(5, 3, "憲法記念日");
+  add(5, 4, "みどりの日");
+  add(5, 5, "こどもの日");
+  add(7, nthMonday(7, 3), "海の日");
+  add(8, 11, "山の日");
+  add(9, nthMonday(9, 3), "敬老の日");
+  add(9, shubun, "秋分の日");
+  add(10, nthMonday(10, 2), "スポーツの日");
+  add(11, 3, "文化の日");
+  add(11, 23, "勤労感謝の日");
+
+  // 祝日と祝日にはさまれた平日は「国民の休日」
+  Object.keys(list).forEach((key) => {
+    const d = new Date(`${key}T00:00:00`);
+    const next = new Date(d);
+    next.setDate(d.getDate() + 1);
+    const after = new Date(d);
+    after.setDate(d.getDate() + 2);
+    const nextKey = toDateString(next.getFullYear(), next.getMonth(), next.getDate());
+    const afterKey = toDateString(after.getFullYear(), after.getMonth(), after.getDate());
+    if (!list[nextKey] && list[afterKey] && next.getDay() !== 0) list[nextKey] = "国民の休日";
+  });
+
+  // 祝日が日曜なら、その後の一番近い平日が「振替休日」
+  Object.keys(list).forEach((key) => {
+    const d = new Date(`${key}T00:00:00`);
+    if (d.getDay() !== 0) return;
+    const sub = new Date(d);
+    do {
+      sub.setDate(sub.getDate() + 1);
+    } while (list[toDateString(sub.getFullYear(), sub.getMonth(), sub.getDate())]);
+    list[toDateString(sub.getFullYear(), sub.getMonth(), sub.getDate())] = "振替休日";
+  });
+
+  return list;
 }
 
 // ===== 最初に1回描画する =====
