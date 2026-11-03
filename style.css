@@ -5,7 +5,7 @@
   --bg: #fbfaf7;          /* 画面の背景色 */
   --text: #2b2b2b;        /* 日付の文字色 */
   --sub-text: #8a8a8a;    /* 曜日・ラベルの文字色 */
-   --main: #da3a62;        /* メインカラー(ボタンなど) */
+  --main: #da3a62;        /* メインカラー(ボタンなど) */
   --today-bg: #e9dde0;    /* 今日の丸・選択中の背景色 */
   --today-text: #5c1a2b;  /* 今日の数字の色 */
   --sun: #c0392b;         /* 日曜日の文字色 */
@@ -1121,4 +1121,48 @@ body {
 
 .event-bar.bar-start.bar-end {
   border-radius: 6px;
+}
+
+/* ===== 落選 ===== */
+/* 抽選タブの「落選」の札 */
+.c-status-lost {
+  border: 1px solid var(--line);
+  color: var(--sub-text);
+}
+
+/* 落選した抽選のバーは薄くする */
+.event-bar.lost {
+  opacity: 0.35;
+}
+
+/* 落選したボタン(当選のボタンより目立たない灰色の枠線) */
+.lost-btn {
+  margin-top: 16px;
+  padding: 12px 28px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--sub-text);
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ===== 祝日 ===== */
+/* 祝日は日曜と同じ赤にする */
+.day.holiday {
+  color: var(--sun);
+}
+
+/* 数字の下の祝日の名前(長いときは「…」で切る) */
+.day-holiday {
+  max-width: 100%;
+  height: 11px;
+  margin-top: -4px;
+  font-size: 0.55rem;
+  line-height: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
