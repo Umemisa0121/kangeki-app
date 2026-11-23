@@ -1169,9 +1169,8 @@ body {
 
 /* スマホ用の候補リスト */
 .suggest-box {
-  position: fixed;
-  z-index: 50;
-  max-height: 240px;
+  margin-top: 4px;
+  max-height: 200px;
   overflow-y: auto;
   background: #fff;
   border: 1px solid var(--line);
