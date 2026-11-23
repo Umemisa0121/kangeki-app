@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>観劇スケジュール帳</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <!-- 上のタブ -->
@@ -48,7 +48,7 @@
           <select id="filter-year"><option value="">すべて</option></select>
         </label>
         <label class="filter-item">
-          <span>劇場</span>
+          <span>会場</span>
           <select id="filter-theater"><option value="">すべて</option></select>
         </label>
         <button class="text-link" id="filter-reset">条件をリセット</button>
@@ -78,6 +78,7 @@
             <option value="applied">申込中</option>
             <option value="won">当選・入金待ち</option>
             <option value="paid">入金済み</option>
+            <option value="lost">落選</option>
           </select>
         </label>
         <button class="text-link" id="chusen-filter-reset">条件をリセット</button>
@@ -165,11 +166,17 @@
 
       <span class="field-label">カレンダーに表示する色</span>
       <div class="color-list">
-        <button class="color-btn selected" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
+        <button class="color-btn selected" data-color="#e53935" style="background:#e53935" aria-label="赤"></button>
+        <button class="color-btn" data-color="#ec6a9c" style="background:#ec6a9c" aria-label="ピンク"></button>
+        <button class="color-btn" data-color="#f57c1f" style="background:#f57c1f" aria-label="オレンジ"></button>
+        <button class="color-btn" data-color="#e0a800" style="background:#e0a800" aria-label="山吹色"></button>
+        <button class="color-btn" data-color="#43a047" style="background:#43a047" aria-label="緑"></button>
+        <button class="color-btn" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
         <button class="color-btn" data-color="#1f5fe0" style="background:#1f5fe0" aria-label="青"></button>
-        <button class="color-btn" data-color="#f05a1a" style="background:#f05a1a" aria-label="オレンジ"></button>
-        <button class="color-btn" data-color="#f2a07b" style="background:#f2a07b" aria-label="うすいオレンジ"></button>
-        <button class="color-btn" data-color="#5c1a2b" style="background:#5c1a2b" aria-label="ワインレッド"></button>
+        <button class="color-btn" data-color="#8e44ad" style="background:#8e44ad" aria-label="紫"></button>
+        <label class="color-btn color-custom" aria-label="好きな色を選ぶ">
+          <input type="color" class="color-picker" value="#da3a62">
+        </label>
       </div>
 
       <label class="field">
@@ -193,7 +200,7 @@
       </label>
 
       <label class="field">
-        <span class="field-label">劇場名</span>
+        <span class="field-label">会場名</span>
         <input type="text" id="kangeki-theater" placeholder="例:東京建物 Brillia HALL">
       </label>
 
@@ -222,11 +229,17 @@
 
       <span class="field-label">カレンダーに表示する色</span>
       <div class="color-list">
-        <button class="color-btn selected" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
+        <button class="color-btn selected" data-color="#e53935" style="background:#e53935" aria-label="赤"></button>
+        <button class="color-btn" data-color="#ec6a9c" style="background:#ec6a9c" aria-label="ピンク"></button>
+        <button class="color-btn" data-color="#f57c1f" style="background:#f57c1f" aria-label="オレンジ"></button>
+        <button class="color-btn" data-color="#e0a800" style="background:#e0a800" aria-label="山吹色"></button>
+        <button class="color-btn" data-color="#43a047" style="background:#43a047" aria-label="緑"></button>
+        <button class="color-btn" data-color="#29a9e0" style="background:#29a9e0" aria-label="水色"></button>
         <button class="color-btn" data-color="#1f5fe0" style="background:#1f5fe0" aria-label="青"></button>
-        <button class="color-btn" data-color="#f05a1a" style="background:#f05a1a" aria-label="オレンジ"></button>
-        <button class="color-btn" data-color="#f2a07b" style="background:#f2a07b" aria-label="うすいオレンジ"></button>
-        <button class="color-btn" data-color="#5c1a2b" style="background:#5c1a2b" aria-label="ワインレッド"></button>
+        <button class="color-btn" data-color="#8e44ad" style="background:#8e44ad" aria-label="紫"></button>
+        <label class="color-btn color-custom" aria-label="好きな色を選ぶ">
+          <input type="color" class="color-picker" value="#da3a62">
+        </label>
       </div>
 
       <label class="field">
@@ -274,7 +287,7 @@
       </label>
 
       <label class="field">
-        <span class="field-label">劇場名</span>
+        <span class="field-label">会場名</span>
         <input type="text" id="win-theater" placeholder="例:東京建物 Brillia HALL">
       </label>
 
@@ -319,7 +332,6 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>
-
