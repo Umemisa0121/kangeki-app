@@ -1299,7 +1299,11 @@ document.querySelectorAll(".time-input").forEach((el) => {
   });
 });
 
-document.getElementById("ts-ok").addEventListener("click", () => closeTimePicker(true));
+document.getElementById("ts-ok").addEventListener("click", () => {
+  // スライドを動かさずにOKを押したら、表示されている時間(12:00など)を入れる
+  if (tsTarget && !tsTarget.value) tsTarget.value = `${columnValue(tsHour)}:${columnValue(tsMinute)}`;
+  closeTimePicker(true);
+});
 document.getElementById("ts-cancel").addEventListener("click", () => closeTimePicker(false));
 
 // 窓と時間の欄以外を押したら、時間を決定して閉じる
@@ -1438,3 +1442,86 @@ function makeHolidays(year) {
 
 // ===== 最初に1回描画する =====
 renderCalendar();
+
+// ===== スマホ用の候補リスト(iPhoneでは datalist の候補が出ないため) =====
+if (window.matchMedia("(pointer: coarse)").matches) {
+  const suggestBox = document.createElement("div");
+  suggestBox.className = "suggest-box";
+  suggestBox.hidden = true;
+  document.body.appendChild(suggestBox);
+  let suggestInput = null;
+
+  // カタカナ→ひらがな、空白なし、小文字にそろえて比べる
+  const toSearchWord = (text) =>
+    (text || "")
+      .replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60))
+      .replace(/[\s　]/g, "")
+      .toLowerCase();
+
+  // 打った文字に合う候補を、入力欄の下に出す
+  function showSuggestBox(input) {
+    const list = document.getElementById(input.dataset.suggest);
+    if (!list) return;
+    const word = toSearchWord(input.value);
+    const items = [...list.options]
+      .map((o) => o.value)
+      .filter((v) => v !== input.value && toSearchWord(v).includes(word))
+      .slice(0, 8);
+    if (items.length === 0) {
+      suggestBox.hidden = true;
+      return;
+    }
+    suggestBox.innerHTML = items
+      .map((v) => `<button type="button" class="suggest-item">${escapeHtml(v)}</button>`)
+      .join("");
+    suggestInput = input;
+    suggestBox.hidden = false;
+    placeSuggestBox();
+  }
+
+  // 候補リストを入力欄のすぐ下に置く
+  function placeSuggestBox() {
+    if (suggestBox.hidden || !suggestInput) return;
+    const r = suggestInput.getBoundingClientRect();
+    suggestBox.style.left = r.left + "px";
+    suggestBox.style.top = r.bottom + 4 + "px";
+    suggestBox.style.width = r.width + "px";
+  }
+
+  // 入力欄をタップしたとき・文字を打ったときに候補を出す
+  document.addEventListener("focusin", (e) => {
+    const input = e.target;
+    if (input.tagName !== "INPUT") return;
+    // iPhone標準の候補と重ならないように、list を data-suggest に移す
+    if (input.getAttribute("list")) {
+      input.dataset.suggest = input.getAttribute("list");
+      input.removeAttribute("list");
+    }
+    if (input.dataset.suggest) showSuggestBox(input);
+  });
+  document.addEventListener("input", (e) => {
+    if (e.target.dataset && e.target.dataset.suggest) showSuggestBox(e.target);
+  });
+
+  // 候補をタップしたら入力欄に入れる
+  suggestBox.addEventListener("pointerdown", (e) => e.preventDefault()); // 入力欄からフォーカスが外れないように
+  suggestBox.addEventListener("click", (e) => {
+    const item = e.target.closest(".suggest-item");
+    if (!item || !suggestInput) return;
+    suggestInput.value = item.textContent;
+    suggestInput.dispatchEvent(new Event("input", { bubbles: true }));
+    suggestBox.hidden = true;
+  });
+
+  // 入力欄から離れたら閉じる
+  document.addEventListener("focusout", () => {
+    setTimeout(() => {
+      if (document.activeElement !== suggestInput) suggestBox.hidden = true;
+    }, 150);
+  });
+  // 画面がスクロールしても(キーボードが出たときなど)、入力欄の下についていく
+  document.addEventListener("scroll", (e) => {
+    if (!suggestBox.contains(e.target)) placeSuggestBox();
+  }, true);
+  window.addEventListener("resize", placeSuggestBox);
+}
