@@ -1299,7 +1299,11 @@ document.querySelectorAll(".time-input").forEach((el) => {
   });
 });
 
-document.getElementById("ts-ok").addEventListener("click", () => closeTimePicker(true));
+document.getElementById("ts-ok").addEventListener("click", () => {
+  // スライドを動かさずにOKを押したら、表示されている時間(12:00など)を入れる
+  if (tsTarget && !tsTarget.value) tsTarget.value = `${columnValue(tsHour)}:${columnValue(tsMinute)}`;
+  closeTimePicker(true);
+});
 document.getElementById("ts-cancel").addEventListener("click", () => closeTimePicker(false));
 
 // 窓と時間の欄以外を押したら、時間を決定して閉じる
@@ -1326,54 +1330,6 @@ function normalizeTime(text) {
   if (h > 23 || m > 59) return text;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
-
-// ===== 劇場のリスト =====
-// 会場名の候補に出す劇場(足したいときは "劇場名", を1行足す)
-const THEATERS = [
-  // 東京
-  "東京宝塚劇場",
-  "日生劇場",
-  "シアタークリエ",
-  "明治座",
-  "新橋演舞場",
-  "歌舞伎座",
-  "東京建物 Brillia HALL",
-  "東京芸術劇場",
-  "サンシャイン劇場",
-  "東急シアターオーブ",
-  "THEATER MILANO-Za",
-  "新国立劇場",
-  "世田谷パブリックシアター",
-  "本多劇場",
-  "紀伊國屋ホール",
-  "紀伊國屋サザンシアター",
-  "天王洲 銀河劇場",
-  "日本青年館ホール",
-  "東京国際フォーラム",
-  "有楽町よみうりホール",
-  "シアター1010",
-  "IMM THEATER",
-  "品川プリンスホテル ステラボール",
-  "シアターGロッソ",
-  "KAAT神奈川芸術劇場",
-  "JR東日本四季劇場［春］",
-  "JR東日本四季劇場［秋］",
-  "電通四季劇場［海］",
-  "有明四季劇場",
-  // 大阪・兵庫
-  "梅田芸術劇場 メインホール",
-  "梅田芸術劇場 シアター・ドラマシティ",
-  "新歌舞伎座",
-  "フェスティバルホール",
-  "オリックス劇場",
-  "COOL JAPAN PARK OSAKA",
-  "宝塚大劇場",
-  "兵庫県立芸術文化センター",
-  // 名古屋・福岡
-  "御園座",
-  "博多座",
-  "キャナルシティ劇場",
-];
 
 // ===== 前に入れた言葉を、入力欄の候補に出す =====
 // 候補のリスト(datalist)を作る
@@ -1410,7 +1366,7 @@ function fillSuggest(list, words) {
 function updateSuggestions() {
   const recent = [...events].reverse();
   fillSuggest(titleSuggest, recent.map((ev) => ev.title));
-  fillSuggest(theaterSuggest, [...recent.map((ev) => ev.theater), ...THEATERS]); // 前に入れた会場名＋劇場のリスト
+  fillSuggest(theaterSuggest, recent.map((ev) => ev.theater));
   fillSuggest(goodsSuggest, recent.flatMap((ev) => (ev.goods || []).map((g) => g.name)));
 }
 
@@ -1486,3 +1442,86 @@ function makeHolidays(year) {
 
 // ===== 最初に1回描画する =====
 renderCalendar();
+
+// ===== スマホ用の候補リスト(iPhoneでは datalist の候補が出ないため) =====
+if (window.matchMedia("(pointer: coarse)").matches) {
+  const suggestBox = document.createElement("div");
+  suggestBox.className = "suggest-box";
+  suggestBox.hidden = true;
+  document.body.appendChild(suggestBox);
+  let suggestInput = null;
+
+  // カタカナ→ひらがな、空白なし、小文字にそろえて比べる
+  const toSearchWord = (text) =>
+    (text || "")
+      .replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60))
+      .replace(/[\s　]/g, "")
+      .toLowerCase();
+
+  // 打った文字に合う候補を、入力欄の下に出す
+  function showSuggestBox(input) {
+    const list = document.getElementById(input.dataset.suggest);
+    if (!list) return;
+    const word = toSearchWord(input.value);
+    const items = [...list.options]
+      .map((o) => o.value)
+      .filter((v) => v !== input.value && toSearchWord(v).includes(word))
+      .slice(0, 8);
+    if (items.length === 0) {
+      suggestBox.hidden = true;
+      return;
+    }
+    suggestBox.innerHTML = items
+      .map((v) => `<button type="button" class="suggest-item">${escapeHtml(v)}</button>`)
+      .join("");
+    suggestInput = input;
+    suggestBox.hidden = false;
+    placeSuggestBox();
+  }
+
+  // 候補リストを入力欄のすぐ下に置く
+  function placeSuggestBox() {
+    if (suggestBox.hidden || !suggestInput) return;
+    const r = suggestInput.getBoundingClientRect();
+    suggestBox.style.left = r.left + "px";
+    suggestBox.style.top = r.bottom + 4 + "px";
+    suggestBox.style.width = r.width + "px";
+  }
+
+  // 入力欄をタップしたとき・文字を打ったときに候補を出す
+  document.addEventListener("focusin", (e) => {
+    const input = e.target;
+    if (input.tagName !== "INPUT") return;
+    // iPhone標準の候補と重ならないように、list を data-suggest に移す
+    if (input.getAttribute("list")) {
+      input.dataset.suggest = input.getAttribute("list");
+      input.removeAttribute("list");
+    }
+    if (input.dataset.suggest) showSuggestBox(input);
+  });
+  document.addEventListener("input", (e) => {
+    if (e.target.dataset && e.target.dataset.suggest) showSuggestBox(e.target);
+  });
+
+  // 候補をタップしたら入力欄に入れる
+  suggestBox.addEventListener("pointerdown", (e) => e.preventDefault()); // 入力欄からフォーカスが外れないように
+  suggestBox.addEventListener("click", (e) => {
+    const item = e.target.closest(".suggest-item");
+    if (!item || !suggestInput) return;
+    suggestInput.value = item.textContent;
+    suggestInput.dispatchEvent(new Event("input", { bubbles: true }));
+    suggestBox.hidden = true;
+  });
+
+  // 入力欄から離れたら閉じる
+  document.addEventListener("focusout", () => {
+    setTimeout(() => {
+      if (document.activeElement !== suggestInput) suggestBox.hidden = true;
+    }, 150);
+  });
+  // 画面がスクロールしても(キーボードが出たときなど)、入力欄の下についていく
+  document.addEventListener("scroll", (e) => {
+    if (!suggestBox.contains(e.target)) placeSuggestBox();
+  }, true);
+  window.addEventListener("resize", placeSuggestBox);
+}
