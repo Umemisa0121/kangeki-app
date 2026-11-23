@@ -1166,3 +1166,35 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* スマホ用の候補リスト */
+.suggest-box {
+  position: fixed;
+  z-index: 50;
+  max-height: 240px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+.suggest-box[hidden] {
+  display: none;
+}
+.suggest-item {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  text-align: left;
+  font-size: 15px;
+  color: var(--text);
+}
+.suggest-item:last-child {
+  border-bottom: none;
+}
+.suggest-item:active {
+  background: var(--today-bg);
+}
