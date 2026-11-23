@@ -1568,7 +1568,9 @@ if (window.matchMedia("(pointer: coarse)").matches) {
       .join("");
     suggestInput = input;
     // 候補リストを入力欄のすぐ後ろに置く(キーボードが出ても入力欄の下についてくる)
-    if (input.nextElementSibling !== suggestBox) input.after(suggestBox);
+    // グッズの欄は、その行の下に出す(行の中に入ると並びが崩れるため)
+    const anchor = input.closest(".goods-row") || input;
+    if (anchor.nextElementSibling !== suggestBox) anchor.after(suggestBox);
     suggestBox.hidden = false;
   }
 
