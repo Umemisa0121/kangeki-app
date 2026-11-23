@@ -1567,17 +1567,9 @@ if (window.matchMedia("(pointer: coarse)").matches) {
       .map((v) => `<button type="button" class="suggest-item">${escapeHtml(v)}</button>`)
       .join("");
     suggestInput = input;
+    // 候補リストを入力欄のすぐ後ろに置く(キーボードが出ても入力欄の下についてくる)
+    if (input.nextElementSibling !== suggestBox) input.after(suggestBox);
     suggestBox.hidden = false;
-    placeSuggestBox();
-  }
-
-  // 候補リストを入力欄のすぐ下に置く
-  function placeSuggestBox() {
-    if (suggestBox.hidden || !suggestInput) return;
-    const r = suggestInput.getBoundingClientRect();
-    suggestBox.style.left = r.left + "px";
-    suggestBox.style.top = r.bottom + 4 + "px";
-    suggestBox.style.width = r.width + "px";
   }
 
   // 入力欄をタップしたとき・文字を打ったときに候補を出す
@@ -1611,9 +1603,4 @@ if (window.matchMedia("(pointer: coarse)").matches) {
       if (document.activeElement !== suggestInput) suggestBox.hidden = true;
     }, 150);
   });
-  // 画面がスクロールしても(キーボードが出たときなど)、入力欄の下についていく
-  document.addEventListener("scroll", (e) => {
-    if (!suggestBox.contains(e.target)) placeSuggestBox();
-  }, true);
-  window.addEventListener("resize", placeSuggestBox);
 }
